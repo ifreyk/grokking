@@ -3,17 +3,14 @@ import torch
 import numpy as np
 import pandas as pd
 import sklearn as sc
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#%%
 from sklearn.datasets import make_regression
-X, y = make_regression(n_samples=1000, n_features=10000, noise=1, random_state=42)
-#%%
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # Generate synthetic data
@@ -78,12 +75,13 @@ print(model)
 
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
-optimizer = optim.SGD(model.parameters(), lr=0.00001, momentum=0.9,weight_decay = weight_decay)
+optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=weight_decay)
 #%%
 # Train the model
 num_epochs = 1000000
 train_loss_list = []
 test_loss_list = []
+weight_norm_list = []
 for epoch in range(num_epochs):
     # Forward pass
     outputs = model(X_train)
@@ -93,9 +91,16 @@ for epoch in range(num_epochs):
     optimizer.zero_grad()
     train_loss.backward()
     optimizer.step()
-
+    weight_norm_all = []
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                weight_norm = torch.norm(param, p=2).item()
+                weight_norm_all.append(weight_norm)
+    weight_norm_mean = np.mean(weight_norm_all)
+    weight_norm_list.append(weight_norm_mean)
     # Print progress
-    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss.item():.4f}')
+    print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss.item():.4f}, Weight norm: {weight_norm_mean}')
     train_loss_list.append(train_loss)
     with torch.no_grad():
         model.eval()
