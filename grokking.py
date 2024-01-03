@@ -41,13 +41,13 @@ class RegressionModel(nn.Module):
         self.batch_norm2 = nn.BatchNorm1d(100)
         self.dropout2 = nn.Dropout(0.2)
         
-        self.layer3 = nn.Linear(100, 100)
-        self.batch_norm3 = nn.BatchNorm1d(100)
-        self.dropout3 = nn.Dropout(0.2)
+        #self.layer3 = nn.Linear(100, 100)
+        #self.batch_norm3 = nn.BatchNorm1d(100)
+        #self.dropout3 = nn.Dropout(0.2)
 
-        self.layer4 = nn.Linear(100, 100)
-        self.batch_norm4 = nn.BatchNorm1d(100)
-        self.dropout4 = nn.Dropout(0.2)
+        #self.layer4 = nn.Linear(100, 100)
+        #self.batch_norm4 = nn.BatchNorm1d(100)
+        #self.dropout4 = nn.Dropout(0.2)
         
         self.output_layer = nn.Linear(100, 1)
 
@@ -60,27 +60,28 @@ class RegressionModel(nn.Module):
         x = self.batch_norm2(x)
         x = self.dropout2(x)
         
-        x = torch.relu(self.layer3(x))
-        x = self.batch_norm3(x)
-        x = self.dropout3(x)
+        #x = torch.relu(self.layer3(x))
+        #x = self.batch_norm3(x)
+        #x = self.dropout3(x)
         
         x = self.output_layer(x)
         return x
 #%%
 # Instantiate the model
 model = RegressionModel().to(device)
-weight_decay = 1e-4
+weight_decay = 1e-3
 # Print the model summary to see the total number of parameters
 print(model)
 
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=weight_decay)
+optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=weight_decay)
+
 #%%
 # Train the model
 num_epochs = 1000000
-train_loss_list = []
-test_loss_list = []
+#train_loss_list = []
+#test_loss_list = []
 weight_norm_list = []
 for epoch in range(num_epochs):
     # Forward pass
@@ -101,10 +102,18 @@ for epoch in range(num_epochs):
     weight_norm_list.append(weight_norm_mean)
     # Print progress
     print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss.item():.4f}, Weight norm: {weight_norm_mean}')
-    train_loss_list.append(train_loss)
+    #train_loss_list.append(train_loss)
     with torch.no_grad():
         model.eval()
         test_outputs = model(X_test)
         test_loss = criterion(test_outputs, y_test)
-        test_loss_list.append(test_loss)
+        #test_loss_list.append(test_loss)
         print(f'Test Loss: {test_loss.item():.4f}')
+#%%
+import matplotlib.pyplot as plt
+plt.plot(list(range(0,len(weight_norm_list))), weight_norm_list, marker='o')
+plt.xlabel('Epoch')
+plt.ylabel('Total Weight Norm')
+plt.title('Total Weight Norm vs. Epoch')
+plt.grid(True)
+plt.show()
